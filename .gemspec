@@ -19,7 +19,25 @@ Gem::Specification.new do |s|
     "README.markdown"
   ]
   s.files = [
-    "VERSION"
+    ".gemspec",
+     ".gitignore",
+     "MIT-LICENSE",
+     "README.markdown",
+     "Rakefile",
+     "VERSION",
+     "generators/permissive_migration/USAGE",
+     "generators/permissive_migration/permissive_migration_generator.rb",
+     "generators/permissive_migration/templates/permissive_migration.rb",
+     "lib/permissive.rb",
+     "lib/permissive/acts_as_permissive.rb",
+     "lib/permissive/permission.rb",
+     "lib/permissive/permissions.rb",
+     "rails/init.rb",
+     "spec/acts_as_permissive_spec.rb",
+     "spec/permissions_spec.rb",
+     "spec/rcov.opts",
+     "spec/spec.opts",
+     "spec/spec_helper.rb"
   ]
   s.homepage = %q{http://github.com/flipsasser/permissive}
   s.rdoc_options = ["--charset=UTF-8"]
