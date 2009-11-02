@@ -1,0 +1,7 @@
+Usage:
+
+  script/generate permissive_migration
+  
+This will create a migration that will add the Permissive tables to your
+application. You can modify this migration to your heart's content. When
+you're done, run `rake db:migrate` and Permissive will be ready to go!
