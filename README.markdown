@@ -48,47 +48,47 @@ And that's all it takes to configure permissions! Now that we have them, let's g
 
 Easy-peasy, right? Let's try granting a few permissions:
 
-  @james = Employee.create(:first_name => 'James', :last_name => 'Brennan')
-  @frigo = Employee.create(:first_name => 'Tommy', :last_name => 'Frigo')
-  @adventureland = Company.create(:name => 'Adventureland')
+	@james = Employee.create(:first_name => 'James', :last_name => 'Brennan')
+	@frigo = Employee.create(:first_name => 'Tommy', :last_name => 'Frigo')
+	@adventureland = Company.create(:name => 'Adventureland')
 
-  # Okay, let's do some granting. We'll start by scoping to a specific company.
-  @james.can!(:manage_games, :on => @adventureland)
+	# Okay, let's do some granting. We'll start by scoping to a specific company.
+	@james.can!(:manage_games, :on => @adventureland)
 
-  # Now let's do some permission checking.
-  @james.can?(:manage_games, :on => @adventureland) #=> true
+	# Now let's do some permission checking.
+	@james.can?(:manage_games, :on => @adventureland) #=> true
 
-  # We can also use the metaprogramming syntax:
-  @james.can_manage_games_on?(@adventureland) #=> true
-  @james.can_control_rides_on?(@adventureland) #=> false
+	# We can also use the metaprogramming syntax:
+	@james.can_manage_games_on?(@adventureland) #=> true
+	@james.can_control_rides_on?(@adventureland) #=> false
 
-  # We can check for multiple permissions, too:
-  @james.can?(:manage_games, :control_rides) #=> false
-  # OR:
-  @james.can_manage_games_and_control_rides?
+	# We can check for multiple permissions, too:
+	@james.can?(:manage_games, :control_rides) #=> false
+	# OR:
+	@james.can_manage_games_and_control_rides?
 
-  # Scoping can be done through any object
-  @frigo.can!(:punch, :on => @james)
-  @frigo.can_punch_on?(@james) #=> true
+	# Scoping can be done through any object
+	@frigo.can!(:punch, :on => @james)
+	@frigo.can_punch_on?(@james) #=> true
 
-  # And the permissions aren't reciprocal
-  @james.can_punch_on?(@frigo) #=> false
+	# And the permissions aren't reciprocal
+	@james.can_punch_on?(@frigo) #=> false
 
-  # Of course, we can grant global (non-scoped) permissions, too:
-  @frigo.can!(:control_rides)
-  @frigo.can_control_rides? #=> true
+	# Of course, we can grant global (non-scoped) permissions, too:
+	@frigo.can!(:control_rides)
+	@frigo.can_control_rides? #=> true
 
-  # BUT! Global permissions don't override scoped permissions.
-  @frigo.can_control_rides_on?(@adventureland) #=> false
+	# BUT! Global permissions don't override scoped permissions.
+	@frigo.can_control_rides_on?(@adventureland) #=> false
 
-  # Likewise, scoped permissions don't bubble up globally:
-  @james.can_manage_games? #=> false
+	# Likewise, scoped permissions don't bubble up globally:
+	@james.can_manage_games? #=> false
 
-  # And, last but not least, let's take all of those great permissions away:
-  @james.revoke(:manage_games, :on => @adventureland)
+	# And, last but not least, let's take all of those great permissions away:
+	@james.revoke(:manage_games, :on => @adventureland)
 
-  # We can revoke all permissions, in any scope, too:
-  @frigo.revoke(:all)
+	# We can revoke all permissions, in any scope, too:
+	@frigo.revoke(:all)
 
 And that's it!
 
