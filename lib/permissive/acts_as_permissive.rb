@@ -9,7 +9,7 @@ module Permissive
           options.assert_valid_keys(:scope)
           has_many :permissions, :class_name => 'Permissive::Permission', :as => :permitted_object do
             def can!(*args)
-              options = args.last.is_a?(Hash) ? args.pop : {}
+              options = args.extract_options!
               options.assert_valid_keys(:on, :reset)
               if options[:on]
                 permission = proxy_owner.permissions.find_or_initialize_by_scoped_object_id_and_scoped_object_type(options[:on].id, options[:on].class.to_s)
