@@ -6,12 +6,10 @@ class InstallPermissive < ActiveRecord::Migration
       t.integer :scoped_object_id
       t.string :scoped_object_type, :limit => 32
       t.integer :mask, :default => 0
-      t.integer :grant_mask, :default => 0
     end
     add_index :permissive_permissions, [:permitted_object_id, :permitted_object_type], :name => 'permissive_permitted'
     add_index :permissive_permissions, [:scoped_object_id, :scoped_object_type], :name => 'permissive_scoped'
     add_index :permissive_permissions, :mask, :name => 'permissive_masks'
-    add_index :permissive_permissions, :grant_mask, :name => 'permissive_grant_masks'
   end
 
   def self.down

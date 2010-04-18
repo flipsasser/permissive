@@ -1,8 +1,9 @@
 Permissive gives your ActiveRecord models granular permission support
 =
-Permissive combines a model-based permissions system with bitmasking to
-create a flexible approach to maintaining permissions on your ActiveRecord
-models. It supports an easy-to-use set of methods for accessing and
+Permissive makes it trivial to add complex permission granting and checking
+to your applications using ActiveRecord. It combines a model-based permissions
+system with bitmasking to create a flexible approach to maintaining permissions
+on your models. It supports an easy-to-use set of methods for accessing and
 determining permissions, including some fun metaprogramming.
 
 Installation
@@ -25,21 +26,30 @@ Installation
 Usage
 -
 
-First, define a few permissions constants. We'll define them in `Rails.root/config/initializers/permissive.rb`. The best practice is to name them in a verb format that follows this pattern: "Object can `DO_PERMISSION_NAME`".
+First, define a few permissions on an ActiveRecord::Base subclass. You define them using the following simple, block-based API:
 
-Permission constants need to be int values counting up from zero. We use ints because Permissive uses bit masking to keep permissions data compact and performant.
-
-	module Permissive::Permissions
-	  MANAGE_GAMES = 0
-	  CONTROL_RIDES = 1
-	  PUNCH = 2
+	class User < ActiveRecord::Base
+		has_permissions do
+			to :manage_games, 0
+			to :control_rides, 1
+			to :punch, 2
+		end
 	end
+
+The best practice is to name them in a verb format that follows this pattern: "Object can `do_action_name`".
+
+Permission values (the second argument in `to`) need to be int values counting up from zero. We use ints because Permissive uses bit
+masking to keep permissions data compact and performant.
 
 And that's all it takes to configure permissions! Now that we have them, let's grant them to a model or two:
 
 	class Employee < ActiveRecord::Base
-	  acts_as_permissive
-	  validates_presence_of :first_name, :last_name
+		has_permissions, :on => :companies do
+			to :manage_games, 0
+			to :control_rides, 1
+			to :punch, 2
+		end
+		validates_presence_of :first_name, :last_name
 	end
 
 	class Company < ActiveRecord::Base
@@ -59,8 +69,9 @@ Easy-peasy, right? Let's try granting a few permissions:
 	@james.can?(:manage_games, :on => @adventureland) #=> true
 
 	# We can also use the metaprogramming syntax:
-	@james.can_manage_games_on?(@adventureland) #=> true
-	@james.can_control_rides_on?(@adventureland) #=> false
+	@james.can_manage_games_in! @adventureland
+	@james.can_manage_games_in? @adventureland #=> true
+	@james.can_control_rides_in? @adventureland #=> false
 
 	# We can check for multiple permissions, too:
 	@james.can?(:manage_games, :control_rides) #=> false
@@ -69,17 +80,20 @@ Easy-peasy, right? Let's try granting a few permissions:
 
 	# Scoping can be done through any object
 	@frigo.can!(:punch, :on => @james)
-	@frigo.can_punch_on?(@james) #=> true
+	@frigo.can_punch? @james #=> true
 
 	# And the permissions aren't reciprocal
-	@james.can_punch_on?(@frigo) #=> false
+	@james.can_punch? @frigo #=> false
 
 	# Of course, we can grant global (non-scoped) permissions, too:
-	@frigo.can!(:control_rides)
+	@frigo.can_control_rides!
 	@frigo.can_control_rides? #=> true
 
+	# And we can grant permissions global to a class:
+	@frigo.can_control_rides_in! Company
+
 	# BUT! Global permissions don't override scoped permissions.
-	@frigo.can_control_rides_on?(@adventureland) #=> false
+	@frigo.can_control_rides_in?(@adventureland) #=> false
 
 	# Likewise, scoped permissions don't bubble up globally:
 	@james.can_manage_games? #=> false
@@ -89,6 +103,10 @@ Easy-peasy, right? Let's try granting a few permissions:
 
 	# We can revoke all permissions, in any scope, too:
 	@frigo.revoke(:all)
+
+	# And revoking does the fun meta thing, too:
+	@frigo.cannot_punch!(@james)
+	@frigo.can_punch? @james #=> flase
 
 And that's it!
 
@@ -128,17 +146,7 @@ which might yield something like
 	# and
 	@employee.can_control_rides_in_company @adventureland
 
-I'd also like to support a more intelligent grammar:
-
-	@james.can_punch? @frigo
-	@frigo.can!(:control_rides, :in => @adventureland)
-
-Meta-programmed methods for granting and revoking would be cool, too:
-
-	@james.can_punch! @frigo
-	@frigo.cannot_control_rides_in! @adventureland
-
-And while we're on the subject of metaprogramming, let's add some OR-ing to the whole thing:
+Let's add some OR-ing to the whole thing:
 
 	@james.can_control_rides_or_manage_games_in? @adventureland
 
