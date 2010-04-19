@@ -287,6 +287,13 @@ describe Permissive::Permission do
         @user.can_manage_games_in?(@organization).should be_true
       end
     end
+
+    it "should support revoking, too" do
+      @user.can_manage_games!
+      @user.can_manage_games?.should be_true
+      @user.cannot_manage_games!
+      @user.can_manage_games?.should be_false
+    end
   end
 
   describe "roles" do

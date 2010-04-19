@@ -85,10 +85,11 @@ module Permissive
         permission_setter = options[:on].nil? || options[:on] == :global ? 'permissions=' : "#{options[:on].to_s.singularize}_permissions="
         class_eval <<-eoc
           def #{permission_setter}(values)
+            values ||= []
             if values.all? {|value| value.is_a?(String) || value.is_a?(Symbol)}
               can!(values, :reset => true, :on => #{options[:on].inspect})
             else
-              super
+              super(values)
             end
           end
         eoc
@@ -125,7 +126,7 @@ module Permissive
               revoke(#{[permissions, args].flatten.join(', ').inspect}, :on => scope)
             end
             end_eval
-            return can!(*[permissions, options].flatten)
+            return revoke(*[permissions, options].flatten)
           elsif setter
             class_eval <<-end_eval
             def #{method}(scope = nil)

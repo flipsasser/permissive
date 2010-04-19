@@ -29,14 +29,15 @@ module Permissive
       end
 
       def normalize_scope(model, scope)
-        case scope
+        scope = case scope
         when Class
           scope.name.tableize
         when String, Symbol
           interpolate_scope(model, scope).to_s.tableize
         else
           :global
-        end.to_s.gsub('/', '_').to_sym
+        end
+        scope.to_s.gsub('/', '_').to_sym
       end
     end
 
@@ -80,7 +81,7 @@ module Permissive
       names.each do |name|
         @role = name.to_s.to_sym
         roles[@role] ||= []
-        instance_eval(&block)
+        instance_eval(&block) if block_given?
       end
       unless model.instance_methods.include?('role=')
         model.class_eval do
