@@ -312,6 +312,21 @@ describe Permissive::Permission do
       Permissive::User.permissions[:global].roles[:rides].should == [:control_rides]
     end
 
+    it "should accept multiple roles" do
+      Permissive::User.has_permissions do
+        to :fight, 0
+        to :flee, 1
+        to :urinate, 2
+
+        role(:normie, :hero) { can :fight }
+        role(:coward, :normie) { can :flee, :urinate }
+      end
+
+      Permissive::User.permissions[:global].roles[:normie].should == [:fight, :flee, :urinate]
+      Permissive::User.permissions[:global].roles[:hero].should == [:fight]
+      Permissive::User.permissions[:global].roles[:coward].should == [:flee, :urinate]
+    end
+
     it "should allow me to assign a role" do
       @james = Permissive::User.create!
       @james.should respond_to(:role=)

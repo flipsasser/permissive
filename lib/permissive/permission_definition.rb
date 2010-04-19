@@ -40,12 +40,14 @@ module Permissive
       end
     end
 
-    def can(name, value = nil)
-      if value
-        to(name, value)
+    def can(*args)
+      # if value
+      #   to(name, value)
+      # end
+      args.each do |name|
+        name = name.to_s.downcase.to_sym
+        roles[@role].push(name) unless roles[@role].include?(name)
       end
-      name = name.to_s.downcase.to_sym
-      roles[@role].push(name) unless roles[@role].include?(name)
     end
 
     def initialize(model, options = {})
@@ -74,10 +76,12 @@ module Permissive
       @permissions ||= {}
     end
 
-    def role(name, &block)
-      @role = name.to_s.to_sym
-      roles[@role] ||= []
-      instance_eval(&block)
+    def role(*names, &block)
+      names.each do |name|
+        @role = name.to_s.to_sym
+        roles[@role] ||= []
+        instance_eval(&block)
+      end
       unless model.instance_methods.include?('role=')
         model.class_eval do
           def role=(role_name)

@@ -1,4 +1,5 @@
 *.gem
+*.gemspec
 coverage/
 pkg/
 **/*.log
