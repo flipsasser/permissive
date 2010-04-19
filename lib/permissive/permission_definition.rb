@@ -40,6 +40,14 @@ module Permissive
       end
     end
 
+    def can(name, value = nil)
+      if value
+        to(name, value)
+      end
+      name = name.to_s.downcase.to_sym
+      roles[@role].push(name) unless roles[@role].include?(name)
+    end
+
     def initialize(model, options = {})
       options.assert_valid_keys(:on)
       @options = options
@@ -64,6 +72,23 @@ module Permissive
 
     def permissions
       @permissions ||= {}
+    end
+
+    def role(name, &block)
+      @role = name.to_s.to_sym
+      roles[@role] ||= []
+      instance_eval(&block)
+      unless model.instance_methods.include?('role=')
+        model.class_eval do
+          def role=(role_name)
+            self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
+          end
+        end
+      end
+    end
+
+    def roles
+      @roles ||= {}
     end
   end
 end

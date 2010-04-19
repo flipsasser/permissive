@@ -18,8 +18,6 @@ module Permissive
 
         include InstanceMethods
 
-        permission_definition = Permissive::PermissionDefinition.define(self, options, &block)
-
         has_many :permissions, :class_name => 'Permissive::Permission', :as => :permitted_object do
           def can!(*args)
             options = args.extract_options!
@@ -81,6 +79,20 @@ module Permissive
         end
 
         delegate :can!, :can?, :revoke, :to => :permissions
+
+        permission_definition = Permissive::PermissionDefinition.define(self, options, &block)
+
+        permission_setter = options[:on].nil? || options[:on] == :global ? 'permissions=' : "#{options[:on].to_s.singularize}_permissions="
+        class_eval <<-eoc
+          def #{permission_setter}(values)
+            if values.all? {|value| value.is_a?(String) || value.is_a?(Symbol)}
+              can!(values, :reset => true, :on => #{options[:on].inspect})
+            else
+              super
+            end
+          end
+        eoc
+        
 
         # Oh that's right, it'll return an object.
         permission_definition

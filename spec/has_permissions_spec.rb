@@ -288,6 +288,39 @@ describe Permissive::Permission do
       end
     end
   end
+
+  describe "roles" do
+
+    before :each do
+      Permissive::User.has_permissions do
+        to :hire_employees, 0
+        to :manage_games, 1
+        to :control_rides, 2
+
+        role :games do
+          can :manage_games
+        end
+
+        role :rides do
+          can :control_rides
+        end
+      end
+    end
+
+    it "should provide a `roles` hash" do
+      Permissive::User.permissions[:global].roles[:games].should == [:manage_games]
+      Permissive::User.permissions[:global].roles[:rides].should == [:control_rides]
+    end
+
+    it "should allow me to assign a role" do
+      @james = Permissive::User.create!
+      @james.should respond_to(:role=)
+      @james.role = 'rides'
+      @james.can_control_rides?.should be_true
+      @james.can_manage_games?.should be_false
+    end
+
+  end
 end
 
 PermissiveSpecHelper.clear_log
