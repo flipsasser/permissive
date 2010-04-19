@@ -30,7 +30,7 @@ begin
     determining permissions, including some fun metaprogramming.}
     gemspec.email = "flip@x451.com"
     gemspec.homepage = "http://github.com/flipsasser/permissive"
-    gemspec.authors = ["Flip Sasser", "Simon Parsons"]
+    gemspec.authors = ["Flip Sasser"]
   end
 rescue LoadError
 end
