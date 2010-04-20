@@ -142,9 +142,9 @@ describe Permissive::Permission do
         to :manage_games, 0
         to :control_rides, 1
 
-        on :users do
+        # on :users do
           to :punch, 2
-        end
+        # end
       end
       @user = Permissive::User.create
       @organization = Permissive::Organization.create
@@ -319,19 +319,29 @@ describe Permissive::Permission do
       Permissive::User.permissions[:global].roles[:rides].should == [:control_rides]
     end
 
-    it "should accept multiple roles" do
-      Permissive::User.has_permissions do
-        to :fight, 0
-        to :flee, 1
-        to :urinate, 2
+    describe "multiple role definitions" do
+      before :each do
+        Permissive::User.has_permissions do
+          to :fight, 0
+          to :flee, 1
+          to :urinate, 2
 
-        role(:normie, :hero) { can :fight }
-        role(:coward, :normie) { can :flee, :urinate }
+          role(:normie, :hero) { can :fight }
+          role(:coward, :normie) { can :flee, :urinate }
+        end
       end
 
-      Permissive::User.permissions[:global].roles[:normie].should == [:fight, :flee, :urinate]
-      Permissive::User.permissions[:global].roles[:hero].should == [:fight]
-      Permissive::User.permissions[:global].roles[:coward].should == [:flee, :urinate]
+      it "should contain the various permissions" do
+        Permissive::User.permissions[:global].roles[:normie].should == [:fight, :flee, :urinate]
+        Permissive::User.permissions[:global].roles[:hero].should == [:fight]
+        Permissive::User.permissions[:global].roles[:coward].should == [:flee, :urinate]
+      end
+
+      it "should assign the correct permissions" do
+        user = Permissive::User.create(:role => 'hero')
+        user.can?(:fight).should be_true
+        user.can?(:flee).should be_false
+      end
     end
 
     it "should allow me to assign a role" do

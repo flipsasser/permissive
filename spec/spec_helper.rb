@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'active_record'
-require 'permissive'
+require File.join File.dirname(__FILE__), '..', 'lib', 'permissive'
 
 module PermissiveSpecHelper
   def self.clear_log

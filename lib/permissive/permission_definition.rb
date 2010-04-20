@@ -83,7 +83,17 @@ module Permissive
         roles[@role] ||= []
         instance_eval(&block) if block_given?
       end
-      unless model.instance_methods.include?('role=')
+      if model.instance_methods.include?('role=')
+        if !model.instance_methods.include?('role_with_permissive=')
+          model.class_eval do
+            def role_with_permissive=(role_name)
+              self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
+              self.role_without_permissive = role_name
+            end
+            alias_method_chain :role=, :permissive
+          end
+        end
+      else
         model.class_eval do
           def role=(role_name)
             self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
