@@ -22,6 +22,7 @@ module Permissive
           def can!(*args)
             options = args.extract_options!
             options.assert_valid_keys(:on, :reset)
+            options.delete(:on) if options[:on] == :global
             permission_matcher = case options[:on]
             when ActiveRecord::Base
               permission = proxy_owner.permissions.find_or_initialize_by_scoped_object_id_and_scoped_object_type(options[:on].id, options[:on].class.name)
@@ -41,8 +42,14 @@ module Permissive
                 permission.mask = permission.mask | bit
               end
             end
-            permission.save!
+            if proxy_owner.new_record?
+              permission.permitted_object = proxy_owner
+              proxy_owner.permissions.push(permission)
+            else
+              permission.save!
+            end
             permission
+            # raise 'set'
           end
 
           def can?(*args)
@@ -54,8 +61,12 @@ module Permissive
 
           def revoke(*args)
             options = args.extract_options!
-            if args.length == 1 && args.first == :all
-              on(options[:on]).destroy_all
+            if args.first == :all
+              if options[:on]
+                on(options[:on]).destroy_all
+              else
+                reload.destroy_all
+              end
             else
               bits = bits_for(options[:on], args)
               on(options[:on]).each do |permission|
@@ -81,20 +92,7 @@ module Permissive
         delegate :can!, :can?, :revoke, :to => :permissions
 
         permission_definition = Permissive::PermissionDefinition.define(self, options, &block)
-
-        permission_setter = options[:on].nil? || options[:on] == :global ? 'permissions=' : "#{options[:on].to_s.singularize}_permissions="
-        class_eval <<-eoc
-          def #{permission_setter}(values)
-            values ||= []
-            if values.all? {|value| value.is_a?(String) || value.is_a?(Symbol)}
-              can!(values, :reset => true, :on => #{options[:on].inspect})
-            else
-              super(values)
-            end
-          end
-        eoc
-        
-
+        permission_definition.define_methods
         # Oh that's right, it'll return an object.
         permission_definition
       end

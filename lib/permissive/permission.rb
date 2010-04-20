@@ -1,7 +1,6 @@
 # This is the core permission class that Permissive uses.
 module Permissive
   class Permission < ActiveRecord::Base
-    attr_writer :grant_template, :template
     belongs_to :permitted_object, :polymorphic => true
     belongs_to :scoped_object, :polymorphic => true
     named_scope :granted, lambda {|permissions|

@@ -16,6 +16,10 @@ module PermissiveSpecHelper
         create_table :permissive_users, :force => true do |t|
           t.timestamps
         end
+        create_table :permissive_users_with_roles, :force => true do |t|
+          t.string :role
+          t.timestamps
+        end
         create_table :permissive_organizations, :force => true do |t|
           t.timestamps
         end
@@ -31,9 +35,10 @@ module PermissiveSpecHelper
   end
 
   def self.log_path
-    File.join(File.dirname(__FILE__), 'spec.log')
+    @log_path ||= File.join(File.dirname(__FILE__), 'spec.log')
   end
 end
 
 # Setup the logging
+PermissiveSpecHelper.clear_log
 ActiveRecord::Base.logger = Logger.new(PermissiveSpecHelper.log_path)

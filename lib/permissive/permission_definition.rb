@@ -17,6 +17,7 @@ module Permissive
       end
 
       def interpolate_scope(model, scope)
+        return :global if scope.to_s == 'global'
         attempted_scope = scope.to_s.singularize.classify
         model_module = model.name.to_s.split('::')
         model_module.pop
@@ -29,6 +30,7 @@ module Permissive
       end
 
       def normalize_scope(model, scope)
+        return :global if scope.to_s == 'global'
         scope = case scope
         when Class
           scope.name.tableize
@@ -51,6 +53,59 @@ module Permissive
       end
     end
 
+    def define_methods
+      permission_setter = @options[:on] == :global ? 'permissions' : "#{@options[:on].to_s.singularize}_permissions"
+      if model.instance_methods.include?("#{permission_setter}=")
+        if !model.instance_methods.include?("#{permission_setter}_with_permissive=")
+          model.class_eval <<-eoc
+            def #{permission_setter}_with_permissive=(values)
+              values ||= []
+              if values.all? {|value| value.is_a?(String) || value.is_a?(Symbol)}
+                can!(values, :reset => true, :on => #{@options[:on].inspect})
+              else
+                self.#{permission_setter}_without_permissive = values
+              end
+            end
+            # alias_method_chain "#{permission_setter}=", :permissive
+          eoc
+        end
+        model.alias_method_chain "#{permission_setter}=", :permissive
+      else
+        model.class_eval <<-eoc
+          def #{permission_setter}=(values)
+            values ||= []
+            if values.all? {|value| value.is_a?(String) || value.is_a?(Symbol)}
+              can!(values, :reset => true, :on => #{@options[:on].inspect})
+            end
+          end
+        eoc
+      end
+
+      if model.instance_methods.include?('role=') && !model.respond_to?(:permissive_role_defined?)
+        puts "role= defined but role_defined? is false"
+        model.class_eval do
+          def role_with_permissive=(role_name)
+            self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
+            self.role_without_permissive = role_name.to_s.downcase
+          end
+        end
+        model.alias_method_chain :role=, :permissive
+      else
+        model.class_eval do
+          def role=(role_name)
+            self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
+          end
+
+          class << self
+            def permissive_role_defined?
+              true
+            end
+            protected :permissive_role_defined?
+          end
+        end
+      end
+    end
+
     def initialize(model, options = {})
       options.assert_valid_keys(:on)
       @options = options
@@ -62,7 +117,8 @@ module Permissive
     end
 
     def on(class_name, &block)
-      Permissive::PermissionDefinition.define(model, @options.merge(:on => class_name), &block)
+      permission_definition = Permissive::PermissionDefinition.define(model, @options.merge(:on => class_name), &block)
+      permission_definition.define_methods
     end
 
     def permission(name, value)
@@ -82,22 +138,12 @@ module Permissive
         @role = name.to_s.to_sym
         roles[@role] ||= []
         instance_eval(&block) if block_given?
-      end
-      if model.instance_methods.include?('role=')
-        if !model.instance_methods.include?('role_with_permissive=')
-          model.class_eval do
-            def role_with_permissive=(role_name)
-              self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
-              self.role_without_permissive = role_name
+        if model.instance_methods.include?('role') && !model.instance_methods.include?("is_#{name}?")
+          model.class_eval <<-eoc
+            def is_#{name}?
+              role == #{name.to_s.downcase.inspect}
             end
-            alias_method_chain :role=, :permissive
-          end
-        end
-      else
-        model.class_eval do
-          def role=(role_name)
-            self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
-          end
+          eoc
         end
       end
     end
