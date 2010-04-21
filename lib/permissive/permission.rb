@@ -12,7 +12,8 @@ module Permissive
         {:conditions => {:scoped_object_id => scoped_object.id, :scoped_object_type => scoped_object.class.to_s}}
       when Class
         {:conditions => {:scoped_object_id => nil, :scoped_object_type => scoped_object.name}}
-      when Symbol
+      when String, Symbol
+        scope = 
         {:conditions => {:scoped_object_id => nil, :scoped_object_type => scoped_object.to_s.classify}}
       else
         {:conditions => {:scoped_object_id => nil, :scoped_object_type => nil}}

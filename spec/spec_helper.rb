@@ -42,3 +42,4 @@ end
 # Setup the logging
 PermissiveSpecHelper.clear_log
 ActiveRecord::Base.logger = Logger.new(PermissiveSpecHelper.log_path)
+PermissiveSpecHelper.db_up

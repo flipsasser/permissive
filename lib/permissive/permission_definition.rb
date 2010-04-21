@@ -32,6 +32,8 @@ module Permissive
       def normalize_scope(model, scope)
         return :global if scope.to_s == 'global'
         scope = case scope
+        when ActiveRecord::Base
+          scope.class.name.to_s.tableize
         when Class
           scope.name.tableize
         when String, Symbol
@@ -81,26 +83,21 @@ module Permissive
         eoc
       end
 
-      if model.instance_methods.include?('role=') && !model.respond_to?(:permissive_role_defined?)
-        puts "role= defined but role_defined? is false"
+      if model.column_names.include?('role')
         model.class_eval do
-          def role_with_permissive=(role_name)
-            self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
-            self.role_without_permissive = role_name.to_s.downcase
+          def role=(role_name)
+            if role_name
+              self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
+            else
+              self.permissions = []
+            end
+            write_attribute(:role, role_name.to_s.downcase.strip)
           end
         end
-        model.alias_method_chain :role=, :permissive
       else
         model.class_eval do
           def role=(role_name)
             self.permissions = self.class.permissions[:global].roles[role_name.to_s.downcase.to_sym]
-          end
-
-          class << self
-            def permissive_role_defined?
-              true
-            end
-            protected :permissive_role_defined?
           end
         end
       end
@@ -138,7 +135,7 @@ module Permissive
         @role = name.to_s.to_sym
         roles[@role] ||= []
         instance_eval(&block) if block_given?
-        if model.instance_methods.include?('role') && !model.instance_methods.include?("is_#{name}?")
+        if model.column_names.include?('role') && !model.instance_methods.include?("is_#{name}?")
           model.class_eval <<-eoc
             def is_#{name}?
               role == #{name.to_s.downcase.inspect}

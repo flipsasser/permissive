@@ -81,7 +81,7 @@ module Permissive
           end
 
           def bits_for(scope, permissions)
-            on = PermissionDefinition.normalize_scope(proxy_owner.class, scope)
+            on = Permissive::PermissionDefinition.normalize_scope(proxy_owner.class, scope)
             permissions.flatten.map do |permission|
               proxy_owner.class.permissions[on].try(:permissions).try(:[], permission.to_s.underscore.gsub('/', '_').to_sym) || raise(Permissive::InvalidPermissionError.new("#{proxy_owner.class.name} does not have a#{'n' if permission.to_s[0, 1].downcase =~ /[aeiou]/} #{permission} permission#{" on #{on}" if on}"))
             end

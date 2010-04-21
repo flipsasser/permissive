@@ -61,4 +61,34 @@ describe Permissive, "roles" do
       user.can?(:flee).should be_false
     end
   end
+
+  describe "for models that store the role" do
+    before :each do
+      PermissiveSpecHelper.db_up
+    end
+
+    it "should, like, actually store it" do
+      user = UserWithRole.create!(:role => 'hungry_person')
+      UserWithRole.find(user.id).role.should == 'hungry_person'
+    end
+
+    it "should meta-program an 'is_role?' method" do
+      user = UserWithRole.create!(:role => 'hungry_person')
+      user.should respond_to :is_hungry_person?
+    end
+
+    it "should return `true` from 'is_role?' when a user has the correct role" do
+      user = UserWithRole.create!(:role => 'hungry_person')
+      user.is_hungry_person?.should be_true
+      user.is_sleepy_person?.should be_false
+    end
+
+    it "should allow setting the role to 'nil'" do
+      user = UserWithRole.create!(:role => 'hungry_person')
+      user.can_eat?.should be_true
+      user.update_attributes(:role => nil)
+      user.can_eat?.should be_false
+    end
+
+  end
 end

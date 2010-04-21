@@ -29,7 +29,9 @@ describe Permissive, "scoped permissions" do
 
     it "should not respond to generic permissions on scoped permissions" do
       @user.can!(:manage_games, :on => @organization)
-      @user.can?(:manage_games).should be_false
+      lambda {
+        @user.can?(:manage_games).should be_false
+      }.should raise_error(Permissive::InvalidPermissionError)
       @user.can?(:manage_games, :on => @organization).should be_true
     end
 
