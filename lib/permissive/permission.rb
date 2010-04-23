@@ -4,7 +4,7 @@ module Permissive
     belongs_to :permitted_object, :polymorphic => true
     belongs_to :scoped_object, :polymorphic => true
     named_scope :granted, lambda {|permissions|
-      {:conditions => permissions.map{|bit| "mask & #{bit}"}.join(' AND ')}
+      {:conditions => permissions.map{|bit| "(mask & #{bit}) > 0"}.join(' AND ')}
     }
     named_scope :on, lambda {|scoped_object|
       case scoped_object
