@@ -64,6 +64,11 @@ describe Permissive, "automatic method creation" do
         @user.can_manage_games?.should be_false
         @user.can_manage_games_in?(@organization).should be_true
       end
+
+      it "should be identical to the uglier methods" do
+        @user.can_manage_games!(@organization).should == @user.can!(:manage_games, :on => @organization)
+        @user.can!(:manage_games, :on => Permissive::Organization).should == @user.can_manage_games!(Permissive::Organization)
+      end
     end
 
     it "should support revoking, too" do

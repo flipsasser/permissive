@@ -18,7 +18,7 @@ module Permissive
 
         include InstanceMethods
 
-        has_many :permissions, :class_name => 'Permissive::Permission', :as => :permitted_object do
+        has_many :permissions, :class_name => 'Permissive::Permission', :as => :permitted_object, :dependent => :destroy do
           def can!(*args)
             options = args.extract_options!
             options.assert_valid_keys(:on, :reset)
