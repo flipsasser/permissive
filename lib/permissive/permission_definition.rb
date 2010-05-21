@@ -23,7 +23,7 @@ module Permissive
         model_module.pop
         model_module = model_module.join('::')
         if (model_module.blank? ? Object : Object.const_get(model_module)).const_defined?(attempted_scope)
-          [model_module, attempted_scope].join('::')
+          [model_module, attempted_scope].reject(&:blank?).join('::')
         else
           scope.to_s.classify
         end

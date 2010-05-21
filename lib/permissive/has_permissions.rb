@@ -49,7 +49,6 @@ module Permissive
               permission.save!
             end
             permission
-            # raise 'set'
           end
 
           def can?(*args)
@@ -83,8 +82,9 @@ module Permissive
           def bits_for(scope, permissions)
             on = Permissive::PermissionDefinition.normalize_scope(proxy_owner.class, scope)
             permissions.flatten.map do |permission|
-              proxy_owner.class.permissions[on].try(:permissions).try(:[], permission.to_s.underscore.gsub('/', '_').to_sym) || raise(Permissive::InvalidPermissionError.new("#{proxy_owner.class.name} does not have a#{'n' if permission.to_s[0, 1].downcase =~ /[aeiou]/} #{permission} permission#{" on #{on}" if on}"))
-            end
+              permission = permission.to_s.underscore.gsub('/', '_').to_sym
+              proxy_owner.class.permissions[on].try(:permissions).try(:[], permission) || proxy_owner.class.permissions[:global].try(:permissions).try(:[], permission)# || raise(Permissive::InvalidPermissionError.new("#{proxy_owner.class.name} does not have a#{'n' if permission.to_s[0, 1].downcase =~ /[aeiou]/} #{permission} permission#{" on #{on}" if on}"))
+            end.compact
           end
           private :bits_for
         end
@@ -117,7 +117,8 @@ module Permissive
           scope = :global
         end
         permissions = permissions.split('_and_')
-        if permissions.all? {|permission| self.class.permissions[scope].permissions.has_key?(permission.downcase.to_sym) }
+        if permissions.all? {|permission| self.class.permissions[scope].permissions.has_key?(permission.downcase.to_sym) ||
+          self.class.permissions[:global].permissions.has_key?(permission.downcase.to_sym) }
           if revoke
             class_eval <<-end_eval
             def #{method}(scope = nil)

@@ -12,7 +12,7 @@ describe Permissive, "automatic method creation" do
     end
 
     Permissive::User.has_permissions(:on => :organizations) do
-      to :punch, 0
+      to :manage_games, 0
     end
 
     @user = Permissive::User.create
