@@ -72,10 +72,15 @@ describe Permissive, "scoped permissions" do
   end
 
   describe "on classes" do
-    it "should ignore instance-specific permissions" do
+    it "should trump instance-specific permissions" do
       @user.can!(:punch, :on => Permissive::User)
       @user.can?(:punch, :on => Permissive::User).should be_true
-      @user.can?(:punch, :on => Permissive::User.create).should be_false
+      @user.can?(:punch, :on => Permissive::User.create).should be_true
+    end
+
+    it "should not be trumped by instances" do
+      @user.can!(:punch, :on => Permissive::User.create)
+      @user.can?(:punch, :on => Permissive::User).should be_false
     end
 
     it "should interpolate symbols" do

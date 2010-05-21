@@ -9,7 +9,12 @@ module Permissive
     named_scope :on, lambda {|scoped_object|
       case scoped_object
       when ActiveRecord::Base
-        {:conditions => {:scoped_object_id => scoped_object.id, :scoped_object_type => scoped_object.class.to_s}}
+        {
+          :conditions => [
+            "#{table_name}.scoped_object_type = :object_type AND (#{table_name}.scoped_object_id = :object_id OR #{table_name}.scoped_object_id IS NULL)",
+            {:object_id => scoped_object.id, :object_type => scoped_object.class.name}
+          ]
+        }
       when Class
         {:conditions => {:scoped_object_id => nil, :scoped_object_type => scoped_object.name}}
       when String, Symbol
