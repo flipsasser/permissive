@@ -29,29 +29,29 @@ Usage
 First, define a few permissions on an ActiveRecord::Base subclass. You define them using the following simple, block-based API:
 
 	class User < ActiveRecord::Base
-		has_permissions do
-			to :manage_games, 0
-			to :control_rides, 1
-			to :punch, 2
-		end
+	  has_permissions do
+	    to :manage_games, 0
+	    to :control_rides, 1
+	    to :punch, 2
+	  end
 	end
 
 The best practice is to name them in a verb format that follows this pattern: "Object can `do_action_name`".
 
-Permission values (the second argument in `to`) need to be int values counting up from zero. We use ints because Permissive uses bit
-masking to keep permissions data compact and performant.
+Permission values (the second argument in `to`) need to be integer values counting up from zero. We use integers because Permissive
+uses bitmasking to keep permissions data compact and performant.
 
 And that's all it takes to configure permissions! Now that we have them, let's grant them to a model or two:
 
 	class Employee < ActiveRecord::Base
-		has_permissions, :on => :companies do
-			to :manage_games, 0
-			to :control_rides, 1
-			to :punch, 2
-		end
-		validates_presence_of :first_name, :last_name
+	  has_permissions :on => :companies do
+	    to :manage_games, 0
+	    to :control_rides, 1
+	    to :punch, 2
+	  end
+	  validates_presence_of :first_name, :last_name
 	end
-
+	
 	class Company < ActiveRecord::Base
 	  validates_presence_of :name
 	end

@@ -118,7 +118,7 @@ module Permissive
         end
         permissions = permissions.split('_and_')
         if permissions.all? {|permission| self.class.permissions[scope].permissions.has_key?(permission.downcase.to_sym) ||
-          self.class.permissions[:global].permissions.has_key?(permission.downcase.to_sym) }
+          self.class.permissions[:global].has_key?(permission.downcase.to_sym) }
           if revoke
             class_eval <<-end_eval
             def #{method}(scope = nil)
